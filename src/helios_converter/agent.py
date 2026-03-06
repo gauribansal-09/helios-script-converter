@@ -15,11 +15,11 @@ import json
 import logging
 from pathlib import Path
 
-from claude_agent_sdk import AgentError, ClaudeAgentOptions, query
+from claude_agent_sdk import ClaudeAgentOptions, query
 
 from helios_converter.exceptions import ConversionError
 from helios_converter.models import ConversionResult
-from helios_converter.tools import ingest_zip
+from helios_converter.tools import create_ingest_server
 
 logger = logging.getLogger(__name__)
 
@@ -70,8 +70,8 @@ async def run_conversion(zip_path: str, output_folder: str) -> None:
         async for message in query(
             prompt=prompt,
             options=ClaudeAgentOptions(
-                allowed_tools=["Task", "Read", "Write", "Glob", "ingest_zip"],
-                custom_tools=[ingest_zip],
+                allowed_tools=["Task", "Read", "Write", "Glob", "helios__ingest_zip"],
+                mcp_servers={"helios": create_ingest_server()},
                 max_turns=100,
                 setting_sources=["project"],
             ),

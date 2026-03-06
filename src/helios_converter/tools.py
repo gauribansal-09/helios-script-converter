@@ -12,12 +12,22 @@ import tempfile
 import zipfile
 from pathlib import Path
 
+from claude_agent_sdk import create_sdk_mcp_server
+from claude_agent_sdk.types import McpSdkServerConfig
+from pydantic import BaseModel
+
+from claude_agent_sdk import tool as sdk_tool
+
 from helios_converter.utils import scan_directory
 
 logger = logging.getLogger(__name__)
 
 # Module-level handle so the temp dir stays alive for the agent's lifetime
 _tmp_dir: tempfile.TemporaryDirectory | None = None
+
+
+class _IngestInput(BaseModel):
+    zip_path: str
 
 
 async def ingest_zip(zip_path: str) -> dict:
@@ -70,3 +80,20 @@ async def ingest_zip(zip_path: str) -> dict:
         result["total_files"], len(py_files), len(sql_files), len(cfg_files),
     )
     return result
+
+
+def create_ingest_server() -> McpSdkServerConfig:
+    """Build an SDK MCP server that exposes ingest_zip as a tool to Claude."""
+
+    @sdk_tool(
+        name="ingest_zip",
+        description=(
+            "Extract a zip archive of Snowflake scripts and return categorized file paths. "
+            "Call this first before any conversion work."
+        ),
+        input_schema=_IngestInput,
+    )
+    async def _handler(inp: _IngestInput) -> dict:
+        return await ingest_zip(inp.zip_path)
+
+    return create_sdk_mcp_server("helios", tools=[_handler])

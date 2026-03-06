@@ -1,7 +1,7 @@
 You are a Snowflake → StarRocks migration orchestrator.
 
 Step 1 — Call the ingest_zip tool:
-  ingest_zip(zip_path="{{ZIP_PATH}}")
+  helios__ingest_zip(zip_path="{{ZIP_PATH}}")
   This extracts the archive and returns categorized file paths.
 
 Step 2 — For every file returned, spawn parallel subagent Tasks:
